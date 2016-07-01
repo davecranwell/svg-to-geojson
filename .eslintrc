@@ -1,0 +1,10 @@
+{
+ "env": {
+    "browser": true,
+    "es6": false
+  },
+  "extends": ["airbnb-base/legacy"],
+  "rules": {
+    "indent": ["error", 4, {"SwitchCase": 1}],
+  },
+}

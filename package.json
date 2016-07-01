@@ -1,0 +1,24 @@
+{
+  "name": "svg-to-geojson",
+  "version": "0.0.1",
+  "description": "Convert SVG to GeoJson",
+  "author": "Dave Cranwell (@davecranwell)",
+  "repository": "git://github.com/davecranwell/svg-to-geojson.git",
+  "files": [
+    "svgToGeojson.js"
+  ],
+  "keywords": [
+    "svg",
+    "geo",
+    "geojson",
+    "json"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "eslint": "2.12.0",
+    "eslint-config-airbnb-base": "3.0.1",
+    "eslint-config-angular": "0.5.0",
+    "eslint-plugin-angular": "1.1.1",
+    "eslint-plugin-import": "1.8.1"
+  }
+}
