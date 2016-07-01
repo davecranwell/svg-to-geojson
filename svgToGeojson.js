@@ -1,4 +1,119 @@
 /**
+ * Reduces the complexity of C commands in an SVG path, by turning it into
+ * several L commands. Sample rate configurable with the 'complexity' param.
+ * @param  {PathSegList Array} pathSegList: an array of Normalized Path Segments,
+ *                             				created by path.getPathData()
+ * @param  {int} complexity: the number of samples that will be taken along
+ *                           each curve.
+ * @return {Polygon Node}
+ */
+function reducePathSegCurveComplexity(pathSegList, complexity) {
+    var newSegs = [];
+    var lastSeg;
+
+    // Loop through segments, processing each
+    pathSegList.forEach(function (seg) {
+        var tmpPath;
+        var tmpPathLength;
+        var lengthStep;
+        var d;
+        var len;
+        var point;
+
+        if (seg.type === 'C') {
+            /**
+             * Create new isolate path element with only this C (and a starting M) present,
+             * so we only need to divide the curve itself (not whole svg's path)
+             * into lines
+             */
+            tmpPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+
+            tmpPath.setAttribute('d', 'M' + lastSeg.values.slice(-2).join(',')
+                + 'C' + seg.values.join(','));
+
+            /**
+             * step along its length at the provided sample rate, finding
+             * the x,y at each point, creating an L command for each.
+             */
+            tmpPathLength = Math.ceil(tmpPath.getTotalLength());
+            lengthStep = Math.ceil(tmpPathLength / complexity);
+
+            // Can't do anything with zero-length curves
+            if (!tmpPathLength || !lengthStep) return;
+
+            for (d = lengthStep, len = tmpPathLength; d <= len; d += lengthStep) {
+                point = tmpPath.getPointAtLength(d);
+
+                newSegs.push({
+                    type: 'L',
+                    values: [
+                        point.x,
+                        point.y
+                    ]
+                });
+            }
+
+            /**
+             * Lastly, add an L at the final coords: We've divided a curve into N
+             * items, sampling at each N along the length, but the loop ends
+             * before it gets to the final point.
+             *
+             * The Normalized C command object provides these target coords
+             * in 'values' positions 4 and 5.
+             */
+            newSegs.push({
+                type: 'L',
+                values: [
+                    seg.values[4],
+                    seg.values[5]
+                ]
+            });
+        } else {
+            // We don't care about non-curve commands.
+            newSegs.push(seg);
+        }
+
+        /**
+         * Record the segment just passed so its values can be used in determining
+         * starting position of the next seg
+         */
+        lastSeg = seg;
+    });
+
+    return newSegs;
+}
+
+
+/**
+ * Return Width and Height dimensions from provided SVG file
+ * @param  {[type]} svgNode
+ * @return {Object}
+ */
+function getSVGDimensions(svgNode) {
+    var viewBox;
+    var wh;
+    var w;
+    var h;
+
+    // Check for width/height attrs
+    w = parseInt(svgNode.getAttribute('width'), 10);
+    h = parseInt(svgNode.getAttribute('height'), 10);
+
+    // Fall back on viewBox
+    if (typeof w !== 'number' || isNaN(w) || typeof h !== 'number' || isNaN(w)) {
+        viewBox = svgNode.getAttribute('viewBox');
+
+        if (!viewBox || typeof viewBox.replace(/^0-9/g, '') !== 'number') return false;
+
+        wh = viewBox.split(/\s+/);
+        w = wh[2];
+        h = wh[3];
+    }
+
+    return { width: w, height: h };
+}
+
+/**
  * Converts SVG Path and Rect elements into a GeoJSON FeatureCollection
  * @param  {Leafet LatLngBounds object} bounds
  * @param  {DOM Node} svgNode
@@ -66,94 +181,10 @@ function svgToGeoJson(bounds, svgNode) {
             },
             geometry: {
                 type: (elem.tagName === 'polyline') ? 'LineString' : 'Polygon',
-                coordinates: (elem.tagName === 'polyline') ? mappedCoords : [mappedCoords],
+                coordinates: (elem.tagName === 'polyline') ? mappedCoords : [mappedCoords]
             }
         });
     });
 
     return geoJson;
-}
-
-/**
- * Reduces the complexity of C commands in an SVG path, by turning it into
- * several L commands. Sample rate configurable with the 'complexity' param.
- * @param  {PathSegList Array} pathSegList: an array of Normalized Path Segments,
- *                             				created by path.getPathData()
- * @param  {int} complexity: the number of samples that will be taken along
- *                           each curve.
- * @return {Polygon Node}
- */
-function reducePathSegCurveComplexity(pathSegList, complexity) {
-    var newSegs = [];
-    var lastSeg;
-
-    // Loop through segments, processing each
-    pathSegList.forEach(function (seg) {
-        var tmpPath;
-        var tmpPathLength;
-        var lengthStep;
-        var d;
-        var len;
-        var point;
-
-        if (seg.type === 'C') {
-            /**
-             * Create new isolate path element with only this C (and a starting M) present,
-             * so we only need to divide the curve itself (not whole svg's path)
-             * into lines
-             */
-            tmpPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-
-            tmpPath.setAttribute('d', 'M' + lastSeg.values.slice(-2).join(',') + 'C' + seg.values.join(','));
-
-            /**
-             * step along its length at the provided sample rate, finding
-             * the x,y at each point, creating an L command for each.
-             */
-            tmpPathLength = Math.ceil(tmpPath.getTotalLength());
-            lengthStep = Math.ceil(tmpPathLength / complexity);
-
-            // Can't do anything with zero-length curves
-            if (!tmpPathLength || !lengthStep) return;
-
-            for (d = lengthStep, len = tmpPathLength; d <= len; d += lengthStep) {
-                point = tmpPath.getPointAtLength(d);
-
-                newSegs.push({
-                    type: 'L',
-                    values: [
-                        point.x,
-                        point.y
-                    ]
-                });
-            }
-
-            /**
-             * Lastly, add an L at the final coords: We've divided a curve into N
-             * items, sampling at each N along the length, but the loop ends
-             * before it gets to the final point.
-             *
-             * The Normalized C command object provides these target coords
-             * in 'values' positions 4 and 5.
-             */
-            newSegs.push({
-                type: 'L',
-                values: [
-                    seg.values[4],
-                    seg.values[5]
-                ]
-            });
-        } else {
-            // We don't care about non-curve commands.
-            newSegs.push(seg);
-        }
-
-        /**
-         * Record the segment just passed so its values can be used in determining
-         * starting position of the next seg
-         */
-        lastSeg = seg;
-    });
-
-    return newSegs;
 }
