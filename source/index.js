@@ -1,3 +1,5 @@
+import {scaleLinear} from 'd3-scale';
+
 /**
  * Reduces the complexity of C commands in an SVG path, by turning it into
  * several L commands. Sample rate configurable with the 'complexity' param.
@@ -7,18 +9,18 @@
  *                           each curve.
  * @return {Polygon Node}
  */
-function reducePathSegCurveComplexity(pathSegList, complexity) {
-    var newSegs = [];
-    var lastSeg;
+export function reducePathSegCurveComplexity({pathSegList = [], complexity = 0}) {
+    let newSegs = [];
+    let lastSeg;
 
     // Loop through segments, processing each
-    pathSegList.forEach(function (seg) {
-        var tmpPath;
-        var tmpPathLength;
-        var lengthStep;
-        var d;
-        var len;
-        var point;
+    pathSegList.forEach((seg) => {
+        let tmpPath;
+        let tmpPathLength;
+        let lengthStep;
+        let d;
+        let len;
+        let point;
 
         if (seg.type === 'C') {
             /**
@@ -28,8 +30,7 @@ function reducePathSegCurveComplexity(pathSegList, complexity) {
              */
             tmpPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
 
-            tmpPath.setAttribute('d', 'M' + lastSeg.values.slice(-2).join(',')
-                + 'C' + seg.values.join(','));
+            tmpPath.setAttribute('d', `M ${lastSeg.values.slice(-2).join(',')}C${seg.values.join(',')}`);
 
             /**
              * step along its length at the provided sample rate, finding
@@ -89,58 +90,60 @@ function reducePathSegCurveComplexity(pathSegList, complexity) {
  * @param  {[type]} svgNode
  * @return {Object}
  */
-function getSVGDimensions(svgNode) {
-    var viewBox;
-    var wh;
-    var w;
-    var h;
+export function getSVGDimensions(svgNode) {
+    let viewBox;
+    let wh;
+    let width;
+    let height;
 
     // Check for width/height attrs
-    w = parseInt(svgNode.getAttribute('width'), 10);
-    h = parseInt(svgNode.getAttribute('height'), 10);
+    width = parseInt(svgNode.getAttribute('width'), 10);
+    height = parseInt(svgNode.getAttribute('height'), 10);
 
     // Fall back on viewBox
-    if (typeof w !== 'number' || isNaN(w) || typeof h !== 'number' || isNaN(w)) {
+    if (typeof width !== 'number' || isNaN(width) || typeof height !== 'number' || isNaN(height)) {
         viewBox = svgNode.getAttribute('viewBox');
 
         if (!viewBox || typeof viewBox.replace(/^0-9/g, '') !== 'number') return false;
 
         wh = viewBox.split(/\s+/);
-        w = wh[2];
-        h = wh[3];
+        width = wh[2];
+        height = wh[3];
     }
 
-    return { width: w, height: h };
+    return { width, height };
 }
 
 /**
  * Converts SVG Path and Rect elements into a GeoJSON FeatureCollection
- * @param  {Leafet LatLngBounds object} bounds
+ * @param  {Array} bounds: Array of lat/lon arrays e.g [[n,w],[s,e]]
  * @param  {DOM Node} svgNode
- * @return {GeoJson}
+ * @return {GeoJson Object}
  */
-function svgToGeoJson(bounds, svgNode) {
-    var geoJson = {
+export function svgToGeoJson(bounds, svgNode) {
+    let geoJson = {
         type: 'FeatureCollection',
         features: []
     };
 
     // Split bounds into nw/se to create d3 scale of NESW maximum values
-    var nw = bounds.getNorthWest();
-    var se = bounds.getSouthEast();
+    let nw = bounds[0];
+    let se = bounds[1];
 
-    var mapX = d3.scale.linear().range([parseFloat(nw.lng), parseFloat(se.lng)]);
-    var mapY = d3.scale.linear().range([parseFloat(nw.lat), parseFloat(se.lat)]);
-    var svgDims = getSVGDimensions(svgNode);
-    var elems = svgNode.querySelectorAll('path, rect, polygon, circle, ellipse, polyline');
+    let mapX = scaleLinear.range([parseFloat(nw[1]), parseFloat(se[1])]);
+    let mapY = scaleLinear.range([parseFloat(nw[0]), parseFloat(se[0])]);
+    let svgDims = getSVGDimensions(svgNode);
+
+    // Limit the elements we're interested in. We don't want 'defs' or 'g' for example
+    let elems = svgNode.querySelectorAll('path, rect, polygon, circle, ellipse, polyline');
 
     // Set SVG's width/height as d3 scale's domain,
     mapX.domain([0, svgDims.width]);
     mapY.domain([0, svgDims.height]);
 
-    elems.forEach(function (elem) {
-        var mappedCoords = [];
-        var coords;
+    elems.forEach((elem) => {
+        let mappedCoords = [];
+        let coords;
 
         /**
          * Normalize element path: get path in array of X/Y absolute coords.
@@ -151,9 +154,9 @@ function svgToGeoJson(bounds, svgNode) {
          * with a complexity factor (second param) dictating how many lines
          * each curve should be converted to.
          */
-        var pathData = reducePathSegCurveComplexity(elem.getPathData({ normalize: true }), 5);
+        const pathData = reducePathSegCurveComplexity(elem.getPathData({ normalize: true }), 5);
 
-        coords = pathData.map(function (pathitem) {
+        coords = pathData.map((pathitem) => {
             if (pathitem.type === 'Z') {
                 /**
                  * If Close Path command found, copy first pathData value
@@ -166,7 +169,7 @@ function svgToGeoJson(bounds, svgNode) {
             return [pathitem.values[0], pathitem.values[1]];
         });
 
-        coords.forEach(function (coord) {
+        coords.forEach((coord) => {
             // Map points onto d3 scale
             mappedCoords.push([
                 mapX(coord[0]),
