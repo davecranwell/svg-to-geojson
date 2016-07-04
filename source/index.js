@@ -1,4 +1,5 @@
-import {scaleLinear} from 'd3-scale';
+import { scaleLinear } from 'd3-scale';
+import '../node_modules/path-data-polyfill/path-data-polyfill';
 
 /**
  * Reduces the complexity of C commands in an SVG path, by turning it into
@@ -9,8 +10,8 @@ import {scaleLinear} from 'd3-scale';
  *                           each curve.
  * @return {Polygon Node}
  */
-export function reducePathSegCurveComplexity({pathSegList = [], complexity = 0}) {
-    let newSegs = [];
+export function reducePathSegCurveComplexity(pathSegList = [], complexity = 5) {
+    const newSegs = [];
     let lastSeg;
 
     // Loop through segments, processing each
@@ -30,7 +31,9 @@ export function reducePathSegCurveComplexity({pathSegList = [], complexity = 0})
              */
             tmpPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
 
-            tmpPath.setAttribute('d', `M ${lastSeg.values.slice(-2).join(',')}C${seg.values.join(',')}`);
+            const lastSegCoords = lastSeg.values.slice(-2).join(',');
+
+            tmpPath.setAttribute('d', `M ${lastSegCoords}C${seg.values.join(',')}`);
 
             /**
              * step along its length at the provided sample rate, finding
@@ -49,8 +52,8 @@ export function reducePathSegCurveComplexity({pathSegList = [], complexity = 0})
                     type: 'L',
                     values: [
                         point.x,
-                        point.y
-                    ]
+                        point.y,
+                    ],
                 });
             }
 
@@ -66,8 +69,8 @@ export function reducePathSegCurveComplexity({pathSegList = [], complexity = 0})
                 type: 'L',
                 values: [
                     seg.values[4],
-                    seg.values[5]
-                ]
+                    seg.values[5],
+                ],
             });
         } else {
             // We don't care about non-curve commands.
@@ -116,35 +119,33 @@ export function getSVGDimensions(svgNode) {
 
 /**
  * Converts SVG Path and Rect elements into a GeoJSON FeatureCollection
- * @param  {Array} bounds: Array of lat/lon arrays e.g [[n,w],[s,e]]
+ * @param  {Array} bounds: Array of lat/lon arrays e.g [[n,e],[s,w]]
  * @param  {DOM Node} svgNode
  * @return {GeoJson Object}
  */
-export function svgToGeoJson(bounds, svgNode) {
-    let geoJson = {
+export function svgToGeoJson(bounds, svgNode, complexity = 5) {
+    const geoJson = {
         type: 'FeatureCollection',
-        features: []
+        features: [],
     };
 
     // Split bounds into nw/se to create d3 scale of NESW maximum values
-    let nw = bounds[0];
-    let se = bounds[1];
+    const ne = bounds[0];
+    const sw = bounds[1];
 
-    let mapX = scaleLinear.range([parseFloat(nw[1]), parseFloat(se[1])]);
-    let mapY = scaleLinear.range([parseFloat(nw[0]), parseFloat(se[0])]);
-    let svgDims = getSVGDimensions(svgNode);
+    const mapX = scaleLinear().range([parseFloat(sw[1]), parseFloat(ne[1])]);
+    const mapY = scaleLinear().range([parseFloat(ne[0]), parseFloat(sw[0])]);
+    const svgDims = getSVGDimensions(svgNode);
 
     // Limit the elements we're interested in. We don't want 'defs' or 'g' for example
-    let elems = svgNode.querySelectorAll('path, rect, polygon, circle, ellipse, polyline');
+    const elems = svgNode.querySelectorAll('path, rect, polygon, circle, ellipse, polyline');
 
     // Set SVG's width/height as d3 scale's domain,
     mapX.domain([0, svgDims.width]);
     mapY.domain([0, svgDims.height]);
 
     elems.forEach((elem) => {
-        let mappedCoords = [];
-        let coords;
-
+        const mappedCoords = [];
         /**
          * Normalize element path: get path in array of X/Y absolute coords.
          * This uses a polyfill for SVG 2 getPathData() which was recently
@@ -154,9 +155,11 @@ export function svgToGeoJson(bounds, svgNode) {
          * with a complexity factor (second param) dictating how many lines
          * each curve should be converted to.
          */
-        const pathData = reducePathSegCurveComplexity(elem.getPathData({ normalize: true }), 5);
+        const pathData = reducePathSegCurveComplexity(
+            elem.getPathData({ normalize: true }), complexity
+        );
 
-        coords = pathData.map((pathitem) => {
+        const coords = pathData.map((pathitem) => {
             if (pathitem.type === 'Z') {
                 /**
                  * If Close Path command found, copy first pathData value
@@ -173,19 +176,19 @@ export function svgToGeoJson(bounds, svgNode) {
             // Map points onto d3 scale
             mappedCoords.push([
                 mapX(coord[0]),
-                mapY(coord[1])
+                mapY(coord[1]),
             ]);
         });
 
         geoJson.features.push({
             type: 'Feature',
             properties: {
-                name: 'test'
+                name: 'test',
             },
             geometry: {
                 type: (elem.tagName === 'polyline') ? 'LineString' : 'Polygon',
-                coordinates: (elem.tagName === 'polyline') ? mappedCoords : [mappedCoords]
-            }
+                coordinates: (elem.tagName === 'polyline') ? mappedCoords : [mappedCoords],
+            },
         });
     });
 

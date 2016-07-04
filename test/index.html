@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en" >
+    <meta charset="UTF-8" />
+    <title>SVG to GeoJSON test</title>
+    <script src="../dist/svg-to-geojson.min.js"></script>
+    <style>
+        body {
+            font-family: Arial;
+        }
+        #demolink {
+            text-decoration: none;
+            border: 1px solid blue;
+            background-color: blue;
+            color: white;
+            padding: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>SVG to GeoJSON example</h1>
+    <h2>The example SVG</h2>
+    <svg id="mysvg" width="1096px" height="672px" viewBox="0 0 1096 672" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+        <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+            <g stroke="#979797">
+                <Polyline id="Path-1" points="14.6171875 10.2890625 150.796875 205.199219 267.863281 25.1914062 394.09375 198.679688"></Polyline>
+                <rect id="path-1" fill="#D8D8D8" x="647" y="10" width="221" height="203"></rect>
+                <circle id="Oval-1" fill="#D8D8D8" cx="145.5" cy="370.5" r="75.5"></circle>
+                <rect id="path-3" fill="#D8D8D8" x="411" y="278" width="251" height="206" rx="8"></rect>
+                <polygon id="Polygon-1" fill="#D8D8D8" points="957 308 1087.29474 393.681893 1037.52658 532.318107 876.47342 532.318107 826.705257 393.681893"></polygon>
+                <ellipse id="Oval-2" fill="#D8D8D8" cx="304" cy="614.5" rx="205" ry="43.5"></ellipse>
+            </g>
+        </g>
+    </svg>
+
+    <h2>As GeoJSON</h2>
+    <p>
+        <a href="" id="demolink">View on a map, as GeoJSON</a>
+    </p>
+
+<script>
+    var geoJson = svgtogeojson.svgToGeoJson([
+        [
+            51.730749503487786,
+            0.207366943359375
+        ],
+        // [
+        //     51.69724635547481,
+        //     -1.264801025390625
+        // ],
+        [51.034485632974125, -0.49713134765625]
+    ], document.getElementById('mysvg'), 3);
+
+    document.getElementById('demolink').href = "http://geojson.io/#data=data:application/json," + encodeURIComponent(JSON.stringify(geoJson));
+</script>
+
+
+</body>
+
+
+</html>
