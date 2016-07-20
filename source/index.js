@@ -182,9 +182,7 @@ export function svgToGeoJson(bounds, svgNode, complexity = 5) {
 
         geoJson.features.push({
             type: 'Feature',
-            properties: {
-                name: 'test',
-            },
+            properties: {},
             geometry: {
                 type: (elem.tagName === 'polyline') ? 'LineString' : 'Polygon',
                 coordinates: (elem.tagName === 'polyline') ? mappedCoords : [mappedCoords],
