@@ -123,7 +123,7 @@ export function getSVGDimensions(svgNode) {
  * @param  {DOM Node} svgNode
  * @return {GeoJson Object}
  */
-export function svgToGeoJson(bounds, svgNode, complexity = 5) {
+export function svgToGeoJson(bounds, svgNode, complexity = 5, attributes = []) {
     const geoJson = {
         type: 'FeatureCollection',
         features: [],
@@ -180,9 +180,17 @@ export function svgToGeoJson(bounds, svgNode, complexity = 5) {
             ]);
         });
 
+        var properties = {};
+
+        attributes.forEach(function (attr) {
+            var value = elem.getAttribute(attr);
+            if (value)
+                properties[attr] = value;
+        });
+
         geoJson.features.push({
             type: 'Feature',
-            properties: {},
+            properties: properties,
             geometry: {
                 type: (elem.tagName === 'polyline') ? 'LineString' : 'Polygon',
                 coordinates: (elem.tagName === 'polyline') ? mappedCoords : [mappedCoords],
