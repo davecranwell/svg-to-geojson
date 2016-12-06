@@ -123,7 +123,7 @@ export function getSVGDimensions(svgNode) {
  * @param  {DOM Node} svgNode
  * @return {GeoJson Object}
  */
-export function svgToGeoJson(bounds, svgNode, complexity = 5, attributes = []) {
+export function svgToGeoJson(bounds, svgNode, complexity = 5, attributes = [], multiplier = 1) {
     const geoJson = {
         type: 'FeatureCollection',
         features: [],
@@ -175,8 +175,8 @@ export function svgToGeoJson(bounds, svgNode, complexity = 5, attributes = []) {
         coords.forEach((coord) => {
             // Map points onto d3 scale
             mappedCoords.push([
-                mapX(coord[0]),
-                mapY(coord[1]),
+                mapX(coord[0]) * multiplier,
+                mapY(coord[1]) * multiplier,
             ]);
         });
 
