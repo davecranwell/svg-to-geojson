@@ -144,7 +144,7 @@ export function svgToGeoJson(bounds, svgNode, complexity = 5, attributes = [], m
     mapX.domain([0, svgDims.width]);
     mapY.domain([0, svgDims.height]);
 
-    elems.forEach((elem) => {
+	[].forEach.call(elems, (elem) => {
         const mappedCoords = [];
         /**
          * Normalize element path: get path in array of X/Y absolute coords.
