@@ -1,5 +1,6 @@
+import 'path-data-polyfill/path-data-polyfill';
+
 import { scaleLinear } from 'd3-scale';
-import '../node_modules/path-data-polyfill/path-data-polyfill';
 
 /**
  * Reduces the complexity of C commands in an SVG path, by turning it into
@@ -95,7 +96,6 @@ export function reducePathSegCurveComplexity(pathSegList = [], complexity = 5) {
  */
 export function getSVGDimensions(svgNode) {
     let viewBox;
-    let wh;
     let width;
     let height;
 
@@ -109,9 +109,7 @@ export function getSVGDimensions(svgNode) {
 
         if (!viewBox || typeof viewBox.replace(/^0-9/g, '') !== 'number') return false;
 
-        wh = viewBox.split(/\s+/);
-        width = wh[2];
-        height = wh[3];
+        [width, height] = viewBox.split(/\s+/);
     }
 
     return { width, height };
