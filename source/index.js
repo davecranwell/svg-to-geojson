@@ -121,7 +121,7 @@ export function getSVGDimensions(svgNode) {
  * @param  {DOM Node} svgNode
  * @return {GeoJson Object}
  */
-export function svgToGeoJson(bounds, svgNode, complexity = 5) {
+export function svgToGeoJson(bounds, svgNode, complexity = 5, attributes = [], multiplier = 1) {
     const geoJson = {
         type: 'FeatureCollection',
         features: [],
@@ -142,7 +142,7 @@ export function svgToGeoJson(bounds, svgNode, complexity = 5) {
     mapX.domain([0, svgDims.width]);
     mapY.domain([0, svgDims.height]);
 
-    elems.forEach((elem) => {
+	[].forEach.call(elems, (elem) => {
         const mappedCoords = [];
         /**
          * Normalize element path: get path in array of X/Y absolute coords.
@@ -173,16 +173,22 @@ export function svgToGeoJson(bounds, svgNode, complexity = 5) {
         coords.forEach((coord) => {
             // Map points onto d3 scale
             mappedCoords.push([
-                mapX(coord[0]),
-                mapY(coord[1]),
+                mapX(coord[0]) * multiplier,
+                mapY(coord[1]) * multiplier,
             ]);
+        });
+
+        var properties = {};
+
+        attributes.forEach(function (attr) {
+            var value = elem.getAttribute(attr);
+            if (value)
+                properties[attr] = value;
         });
 
         geoJson.features.push({
             type: 'Feature',
-            properties: {
-                name: 'test',
-            },
+            properties: properties,
             geometry: {
                 type: (elem.tagName === 'polyline') ? 'LineString' : 'Polygon',
                 coordinates: (elem.tagName === 'polyline') ? mappedCoords : [mappedCoords],
