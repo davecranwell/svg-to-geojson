@@ -1,6 +1,6 @@
 {
   "name": "svg-to-geojson",
-  "version": "0.0.2",
+  "version": "0.1.0",
   "description": "Convert SVG to GeoJson",
   "author": "Dave Cranwell (@davecranwell)",
   "repository": "git://github.com/davecranwell/svg-to-geojson.git",
@@ -21,25 +21,24 @@
     "babel-core": "^6.10.4",
     "babel-eslint": "6.1.0",
     "babel-loader": "^6.2.4",
+    "babel-plugin-external-helpers": "6.18.0",
     "babel-preset-es2015": "^6.9.0",
-    "babel-preset-es2015-rollup": "1.1.1",
     "babel-register": "6.9.0",
     "d3-scale": "^1.0.0",
     "eslint": "2.12.0",
     "eslint-config-airbnb-base": "3.0.1",
     "eslint-plugin-import": "1.8.1",
-    "napa": "2.3.0",
     "rollup": "0.33.0",
     "rollup-plugin-babel": "2.6.1",
     "rollup-plugin-commonjs": "3.1.0",
-    "rollup-plugin-node-resolve": "1.7.1",
+    "rollup-plugin-node-resolve": "2.0.0",
     "rollup-plugin-uglify": "1.0.1",
     "uglify-js": "2.7.0"
   },
   "scripts": {
+    "install": "rm -rf node_modules/path-data-polyfill && git clone https://github.com/jarek-foksa/path-data-polyfill.js node_modules/path-data-polyfill",
     "build": "rollup -c",
-    "prepublish": "npm run build",
-    "install": "napa https://github.com/davecranwell/path-data-polyfill.js/archive/v0.1.tar.gz:path-data-polyfill"
+    "prepublish": "npm run build"
   },
   "babel": {
     "presets": [
