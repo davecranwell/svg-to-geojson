@@ -40,15 +40,8 @@
 
 <script>
     var geoJson = svgtogeojson.svgToGeoJson([
-        [
-            51.730749503487786,
-            0.207366943359375
-        ],
-        // [
-        //     51.69724635547481,
-        //     -1.264801025390625
-        // ],
-        [51.034485632974125, -0.49713134765625]
+        [51.60351870425863, 0.207366943359375],
+        [51.342623007528246, -0.46829223632812494]
     ], document.getElementById('mysvg'), 3);
 
     document.getElementById('demolink').href = "http://geojson.io/#data=data:application/json," + encodeURIComponent(JSON.stringify(geoJson));
