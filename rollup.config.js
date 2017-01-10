@@ -11,9 +11,7 @@ export default {
         nodeResolve({
             jsnext: true,
         }),
-        babel({
-            presets: 'es2015-rollup',
-        }),
+        babel(),
         uglify({}, minify),
     ],
     external: [],
