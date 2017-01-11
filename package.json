@@ -1,6 +1,6 @@
 {
   "name": "svg-to-geojson",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Convert SVG to GeoJson",
   "author": "Dave Cranwell (@davecranwell)",
   "repository": "git://github.com/davecranwell/svg-to-geojson.git",
